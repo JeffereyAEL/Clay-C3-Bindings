@@ -5,12 +5,15 @@
   "version": "0.1.0",
   "dependency-search-paths":  [ "lib" ],
   "dependencies":  [ "raylib55" ],
+  "c-sources": [ "c-lang/source/clay.c" ],
   "sources":  [ "source/**" ],
-  "c-sources":  [ "c-lang/source/**" ],
   "cc": "gcc",
   "output": "build",
   "targets": {
     "clay-c3-bindings": {
+      "type": "static-lib"
+    },
+    "video-example": {
       "type": "executable"
     }
   },

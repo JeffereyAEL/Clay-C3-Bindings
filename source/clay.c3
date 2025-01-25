@@ -1,6 +1,7 @@
 module clay;
 
 import std::core::cinterop;
+import std::io @norecurse;
 import carray;
 
 def UIntArray = carray::Array(<uint>) @private;
@@ -25,7 +26,7 @@ struct Dimensions
     float width, height;
 }
 
-struct ClayVector2
+struct ClayVector2 
 {
     float x, y;
 }
@@ -56,9 +57,9 @@ struct CornerRadius
     float bottomRight;
 }
 
-fn CornerRadius cornerRadius(float uniform) @inline
+macro CornerRadius @cornerRadius(#uniform)
 {
-    return {uniform, uniform, uniform, uniform};
+    return {#uniform, #uniform, #uniform, #uniform};
 }
 
 distinct ElementConfigType = char;
@@ -123,24 +124,24 @@ struct SizingAxis
     SizingType type;
 }
 
-fn SizingAxis sizingFit() @inline
+macro SizingAxis @sizingFit()
 {
     return { .size.minMax = {0, 0}, .type = SizingType.FIT };
 }
 
-fn SizingAxis sizingGrow() @inline
+macro SizingAxis @sizingGrow()
 {
     return { .size.minMax = {0, 0}, .type = SizingType.GROW }; 
 }
 
-fn SizingAxis sizingFixed(float pixels) @inline
+macro SizingAxis @sizingFixed(#pixels)
 {
-    return { .size.minMax = {pixels, pixels}, .type = SizingType.FIXED };
+    return { .size.minMax = {#pixels, #pixels}, .type = SizingType.FIXED };
 }
 
-fn SizingAxis sizingPercent(float percent) @inline
+macro SizingAxis @sizingPercent(#percent)
 {
-    return { .size.percent = percent, .type = SizingType.PERCENT };
+    return { .size.percent = #percent, .type = SizingType.PERCENT };
 }
 
 struct Sizing
@@ -157,17 +158,18 @@ struct Padding
     CUShort bottom;
 }
 
-fn Padding paddingUni(CUShort uniform) @inline
+
+macro Padding @paddingUni(#uniform)
 {
-    return {uniform, uniform, uniform, uniform};
+    return {#uniform, #uniform, #uniform, #uniform};
 }
 
-fn Padding padding(CUShort horizontal, CUShort vertical) @inline
+macro Padding @padding(#horizontal, #vertical) 
 {
-    return {horizontal, horizontal, vertical, vertical};
+    return {#horizontal, #horizontal, #vertical, #vertical};
 }
 
-struct LayoutConfig
+struct LayoutConfig (IConfig)
 {
     Sizing sizing;
     Padding padding;
@@ -176,7 +178,7 @@ struct LayoutConfig
     LayoutDirection layoutDirection;
 }
 
-struct RectangleElementConfig
+struct RectangleElementConfig (IConfig)
 {
     ClayColor color;
     CornerRadius cornerRadius;
@@ -590,8 +592,6 @@ def OnHoverEvent = fn void(ElementId elementId, PointerData pointerData, CLongLo
 def MeasureTextFunc = fn Dimensions(ClayString *text, TextElementConfig *config);
 def QueryScrollOffsetFunc = fn ClayVector2(CUInt elementId);
 
-fn ElementId getElementId(String idString) @inline { return __getElementId({idString.len, idString}); }
-
 // Function Forward Declarations ---------------------------------
 // Public API functions ---
 extern fn CUInt minMemorySize() @extern("Clay_MinMemorySize");
@@ -621,17 +621,17 @@ extern fn void setMaxMeasureTextCacheWordCount(CInt maxMeasureTextCacheWordCount
 extern fn void resetMeasureTextCache() @extern("Clay_ResetMeasureTextCache");
 
 // External API functions that now have wrappers to incporate C3's builtin 'String' type
-extern fn ElementId __getElementId(ClayString idString) @extern("Clay_GetElementId") @private;
+extern fn ElementId getElementId(ClayString idString) @extern("Clay_GetElementId") @private;
 
 // External API functions that now have wrappers for ClayIterator behaviour
-extern fn void __beginLayout() @extern("Clay_BeginLayout") @private;
-extern fn RenderCommandArray __endLayout() @extern("Clay_EndLayout") @private;
+extern fn void beginLayout() @extern("Clay_BeginLayout");
+extern fn RenderCommandArray endLayout() @extern("Clay_EndLayout");
 
 // Internal API functions required by macros
-extern fn void __openElement() @extern ("Clay__OpenElement") @private;
-extern fn void __closeElement() @extern("Clay__CloseElement") @private;
-extern fn void __openTextElement(ClayString text, TextElementConfig *textConfig) @extern("Clay__OpenTextElement") @private;
-extern fn void __elementPostConfiguration() @extern("Clay__ElementPostConfiguration") @private;
+extern fn void openElement() @extern ("Clay__OpenElement") @private;
+extern fn void closeElement() @extern("Clay__CloseElement") @private;
+extern fn void openTextElement(ClayString text, TextElementConfig *textConfig) @extern("Clay__OpenTextElement") @private;
+extern fn void elementPostConfiguration() @extern("Clay__ElementPostConfiguration") @private;
 extern fn LayoutConfig * storeLayoutConfig(LayoutConfig config) @extern("Clay__StoreLayoutConfig") @private;
 extern fn void attachId(ElementId id) @extern("Clay__AttachId") @private;
 extern fn void attachLayoutConfig(LayoutConfig *config) @extern("Clay__AttachLayoutConfig") @private;

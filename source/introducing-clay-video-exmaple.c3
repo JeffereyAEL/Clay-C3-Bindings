@@ -1,3 +1,5 @@
+module videoexample @private; // hopefull hide this from the library compilation
+
 import clay;
 import raylib;
 import std::io @norecurse;
@@ -11,41 +13,39 @@ fn void errorHandler(ErrorData errorData)
 
 const ClayColor COLOR_WHITE = { 255, 255, 255, 255};
 
-fn ClayIterator* ClayIterator.renderHeaderButton(ClayIterator *iter, String text) 
+fn void renderHeaderButton(String text) 
 {
-    iter = iter.clay()
-        .layout({ .padding = {16, 16, 8, 8 }})
-        .rectangle({ 
-            .color = { 140, 140, 140, 255 },
-            .cornerRadius = clay::cornerRadius(5)
-        })
-    .children()
-        .text(
-            text,
-            {
-                .fontId = FONT_ID_BODY_16,
-                .fontSize = 16,
-                .textColor = { 255, 255, 255, 255 }
-            }
+    clay::@clay(
+        clay::@layout( $padding: {16, 16, 8, 8 } ),
+        clay::@rectangle( 
+            $color: { 140, 140, 140, 255 },
+            $cornerRadius: clay::@cornerRadius(5)
         )
-    .close(); // call explicit close(), so then we exit this method we're at the same scope as the parent element
-    return iter;
+    ){
+        // clay::text(
+        //     text,
+        //     {
+        //         .fontId = FONT_ID_BODY_16,
+        //         .fontSize = 16,
+        //         .textColor = { 255, 255, 255, 255 }
+        //     }
+        // );
+    };
 }
 
-fn ClayIterator* ClayIterator.renderDropDownMenuItem(ClayIterator *iter, String text) 
+fn void renderDropDownMenuItem(String text) 
 {
-    iter = iter.clay()
-        .layout({ .padding = clay::paddingUni(16)})
-        .text(
-            text, 
-            {
-                .fontId = FONT_ID_BODY_16,
-                .fontSize = 16,
-                .textColor = { 255, 255, 255, 255 }
-            }
-        )
-    .close(); // call explicit close(), so then we exit this method we're at the same scope as the parent element
-    return iter;
+    clay::@clay(
+        clay::@layout( $padding: clay::@paddingUni(16)),
+        // clay::text(
+        //     text, 
+        //     {
+        //         .fontId = FONT_ID_BODY_16,
+        //         .fontSize = 16,
+        //         .textColor = { 255, 255, 255, 255 }
+        //     }
+        // )
+    ) {};
 }
 
 struct Document 
@@ -76,26 +76,27 @@ fn void handleSidebarInteraction(ElementId elementId, PointerData pointerData, C
     }
 }
 
-fn Sizing layoutExpand() @inline 
+macro Sizing @layoutExpand() 
 {
     return {
-        .width = clay::sizingGrow(),
-        .height = clay::sizingGrow()
+        .width = clay::@sizingGrow(),
+        .height = clay::@sizingGrow()
     };
 }
 
-fn RectangleElementConfig contentBackgroundConfig() @inline 
+macro RectangleElementConfig @contentBackgroundConfig() 
 {
     return {
         .color = { 90, 90, 90, 255 },
-        .cornerRadius = clay::cornerRadius(8)
+        .cornerRadius = clay::@cornerRadius(8)
     };
 }
 
-fn void main() 
+fn void main() @public
 {    
     raylib::setConfigFlags(raylib::FLAG_VSYNC_HINT | raylib::FLAG_WINDOW_RESIZABLE | raylib::FLAG_WINDOW_HIGHDPI | raylib::FLAG_MSAA_4X_HINT);
     raylib::initWindow(1024, 768, "Introducing Clay Demo");
+    defer raylib::closeWindow();
 
     CUInt clayRequiredMemory = clay::minMemorySize();
     Arena clayMemory = clay::createArena(clayRequiredMemory, malloc(clayRequiredMemory));
@@ -105,7 +106,7 @@ fn void main()
     clay::setMeasureTextFunction(&clay::renderer::raylibMeasureText);
     clay::renderer::raylibFonts[FONT_ID_BODY_16] = { 
         FONT_ID_BODY_16, 
-        raylib::loadFontEx("build/resources/Lexend-Regular.ttf", 48, null, 400)
+        raylib::loadFontEx("resources/Lexend-Regular.ttf", 48, null, 400)
     };
 
     raylib::setTextureFilter(
@@ -113,7 +114,7 @@ fn void main()
         TextureFilter.BILINEAR
     );
 
-    // clay::setDebugModeEnabled(true);
+    clay::setDebugModeEnabled(true);
 
     while (!raylib::windowShouldClose()) {
         clay::setLayoutDimensions({raylib::getScreenWidth(), raylib::getScreenHeight()});
@@ -124,185 +125,20 @@ fn void main()
 
         clay::beginLayout();
 
-        clay::clay()
-            .id("OuterContainer")
-            .rectangle({ .color = { 43, 41, 51, 255 } })
-            .layout({
-                .layoutDirection = LayoutDirection.TOP_TO_BOTTOM,
-                .sizing = layoutExpand(),
-                .padding = clay::paddingUni(16),
-                .childGap = 16
-            })
-        .children()
-            .clay()
-                .id("HeaderBar")
-                .rectangle(contentBackgroundConfig())
-                .layout({
-                    .sizing = {
-                        .height = clay::sizingFixed(60),
-                        .width = clay::sizingGrow()
-                    },
-                    .padding = { 16, 16, 0, 0 },
-                    .childGap = 16,
-                    .childAlignment = {
-                        .y = AlignY.CENTER
-                    }
-                })
-            .children()
-                .clay()
-                    .id("FileButton")
-                    .layout({ .padding = { 16, 16, 8, 8 }})
-                    .rectangle({
-                        .color = { 140, 140, 140, 255 },
-                        .cornerRadius = clay::cornerRadius(5)
-                    })
-                .children()
-                    .text(
-                        "File", 
-                        {
-                            .fontId = FONT_ID_BODY_16,
-                            .fontSize = 16,
-                            .textColor = { 255, 255, 255, 255 }
-                        }
-                    );
-
-                    bool fileMenuVisible =
-                        clay::pointerOver(clay::getElementId("FileButton"))
-                        || clay::pointerOver(clay::getElementId("FileMenu"));
-
-                    if (fileMenuVisible) {
-                    clay::clay()
-                        .id("FileMenu")
-                        .floating({
-                            .attachment = {
-                                .parent = AttachPoint.LEFT_BOTTOM
-                            }
-                        })
-                        .layout({ .padding = {0, 0, 8, 8 } })
-                    .children()
-                        .clay()
-                            .layout({
-                                .layoutDirection = LayoutDirection.TOP_TO_BOTTOM,
-                                .sizing = {
-                                        .width = clay::sizingFixed(200)
-                                }
-                            })
-                            .rectangle({
-                                .color = { 40, 40, 40, 255 },
-                                .cornerRadius = clay::cornerRadius(8)
-                            })
-                        .children()
-                            .renderDropDownMenuItem("New")
-                            .renderDropDownMenuItem("Open")
-                            .renderDropDownMenuItem("Close")
-                        .close()
-                    .close();
-                    }
-                clay::close()
-                .renderHeaderButton("Edit")
-                .clay().layout({ .sizing = { .width = clay::sizingGrow() }})
-                .renderHeaderButton("Upload")
-                .renderHeaderButton("Media")
-                .renderHeaderButton("Support")
-            .close()
-            .clay()
-                .id("LowerContent")
-                .layout({ .sizing = layoutExpand(), .childGap = 16})
-            .children()
-                .clay()
-                    .id("SideBar")
-                    .rectangle(contentBackgroundConfig())
-                    .layout({
-                        .layoutDirection = LayoutDirection.TOP_TO_BOTTOM,
-                        .padding = clay::paddingUni(16),
-                        .childGap = 8,
-                        .sizing = {
-                            .width = clay::sizingFixed(250),
-                            .height = clay::sizingGrow()
-                        }
-                    })
-                .children();
-                    foreach (int index, Document document : DOCUMENTS) {
-                        LayoutConfig sidebarButtonLayout = {
-                            .sizing = { .width = clay::sizingGrow() },
-                            .padding = clay::paddingUni(16)
-                        };
-                        if (index == selectedDocumentIndex) {
-                            clay::clay()
-                                .layout(sidebarButtonLayout)
-                                .rectangle({
-                                    .color = { 120, 120, 120, 255 },
-                                    .cornerRadius = clay::cornerRadius(8),
-                                })
-                            .children()
-                                .text(
-                                    document.title, 
-                                    {
-                                        .fontId = FONT_ID_BODY_16,
-                                        .fontSize = 20,
-                                        .textColor = { 255, 255, 255, 255 }
-                                    }
-                                )
-                            .close();
-                        } else {
-                            clay::clay()
-                                .layout(sidebarButtonLayout);
-                                clay::onHovered(&handleSidebarInteraction, index);
-                                if (clay::hovered()) 
-                                {
-                                    clay::rectangle({
-                                        .color = { 120, 120, 120, 120 },
-                                        .cornerRadius = clay::cornerRadius(8)
-                                    });
-                                }
-                            clay::children()
-                                .text(
-                                    document.title,
-                                    {
-                                        .fontId = FONT_ID_BODY_16,
-                                        .fontSize = 20,
-                                        .textColor = { 255, 255, 255, 255 }
-                                    }
-                                )
-                            .close();
-                        }
-                    }
-                clay::close()
-            .clay()
-                .id("MainContent")
-                .rectangle(contentBackgroundConfig())
-                .scroll({ .vertical = true })
-                .layout({
-                    .layoutDirection = LayoutDirection.TOP_TO_BOTTOM,
-                    .childGap = 16,
-                    .padding = clay::paddingUni(16),
-                    .sizing = layoutExpand()
-                })
-            .children();
-                Document selectedDocument = DOCUMENTS[selectedDocumentIndex];
-                clay::text(
-                    selectedDocument.title,
-                    {
-                        .fontId = FONT_ID_BODY_16,
-                        .fontSize = 24,
-                        .textColor = COLOR_WHITE
-                    }
-                )
-                .text(
-                    selectedDocument.contents,
-                    {
-                        .fontId = FONT_ID_BODY_16,
-                        .fontSize = 24,
-                        .textColor = COLOR_WHITE
-                    }
-                );
+        clay::@clay(
+                clay::@id("RootContainerBuffer"),
+                clay::@rectangle({255, 0, 0, 255}),
+                clay::@layout($sizing: @layoutExpand())
+            )
+        {
+            // create child elements
+        };
 
         RenderCommandArray renderCommands = clay::endLayout(); // endlout climbs the iterator and closes elements as needed
-
+        
         raylib::beginDrawing();
         raylib::clearBackground(raylib::BLACK);
         clay::renderer::raylibRender(renderCommands);
         raylib::endDrawing();
     }
-    raylib::closeWindow();
 }
