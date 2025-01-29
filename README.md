@@ -21,10 +21,11 @@ CLAY(
             .width = CLAY_SIZING_FIT(),
             .height = CLAY_SIZING_GROW()
         },
-        // .childAlignment = CLAY_ALIGNMENT_TEXT,
         .padding = 10
     }) 
-) { // ...
+) {
+    // define children...
+}
 ```
 
 Clay C3 Macro System
@@ -45,9 +46,7 @@ clay::clay(
         .padding = clay::paddingUni(8)
     })
 ){
-    // FILTER BUTTON OPTIONS POPUP
-    if (isFilterButtonHovered || isFilterOptionHovered)
-    { // ...
+    // define children...
 };
 ```
 
