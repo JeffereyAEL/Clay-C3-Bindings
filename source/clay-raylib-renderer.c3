@@ -1,11 +1,50 @@
+module raylib @if($feature(NO_STDLIB));
+
+distinct ZString = inline char*;    
+
 module clay::renderer;
 
 import raylib;
-import std::math;
-import libc;
-import std::io @norecurse;
 
 // TODO: this entire file was very rushed so it can probably be cleaned up a LOT
+fn double calculate_sine(double x) {
+    double term = x; 
+    double sum = term;
+    double n = 1;
+
+    for (int i = 1; i <= 10; i++) { 
+        term *= (-1) * x * x / ((2 * n) * (2 * n + 1));
+        sum += term;
+        n++;
+    }
+
+    return sum;
+}
+
+fn double calculate_cosine(double x) {
+    double term = 1;
+    double sum = term;
+    double n = 1;
+
+    for (int i = 1; i <= 10; i++) {
+        term *= (-1) * x * x / ((2 * n - 1) * (2 * n));
+        sum += term;
+        n++;
+    }
+
+    return sum;
+}
+
+macro double calculate_tangent(double x) {
+    double sine = calculate_sine(x);
+    double cosine = calculate_cosine(x);
+    // Check for cases where cosine is zero (tangent is undefined)
+    if (cosine == 0.0) {
+        return 0.0;
+    }
+    return sine / cosine;
+}
+
 
 fn Color clayToRaylibColor(ClayColor color) @inline
 {
@@ -14,14 +53,14 @@ fn Color clayToRaylibColor(ClayColor color) @inline
 
 struct RaylibFont
 {
-    CInt fontId;
+    int fontId;
     raylib::Font font;
 }
 
 RaylibFont[10] raylibFonts;
 raylib::Camera raylibCamera;
 
-const Matrix MATRIX_IDENTITY = {
+const Matrix MATRIX_IDENTITY = { 
     1, 0, 0, 0,
     0, 1, 0, 0,
     0, 0, 1, 0,
@@ -57,7 +96,7 @@ fn Matrix matrixPerspective(double fovY, double aspect, double nearPlane, double
                         0, 0, 0, 0,
                         0, 0, 0, 0 };
 
-    double top = nearPlane * math::tan(fovY*0.5);
+    double top = nearPlane * calculate_tangent(fovY*0.5*raylib::RAD2DEG);
     double bottom = -top;
     double right = top*aspect;
     double left = -right;
@@ -310,14 +349,14 @@ fn void raylibRender(RenderCommandArray renderCommands)
     for (int j = 0; j < renderCommands.length; j++)
     {
         RenderCommand *renderCommand = renderCommands.get(j);
-        clay::BoundingBox boundingBox = renderCommand.boundingBox;
+        ClayBoundingBox boundingBox = renderCommand.boundingBox;
         switch (renderCommand.commandType)
         {
             case RenderCommandType.TEXT: {
                 // Raylib uses standard C strings so isn't compatible with cheap slices, we need to clone the string to append null terminator
                 ClayString text = renderCommand.text;
                 ZString cloned = (ZString)malloc((ulong)text.length + 1);
-                libc::memcpy(cloned, text.chars, text.length);
+                $$memcpy(cloned, text.chars, (isz)text.length, false, (isz)0, (isz)0);
                 cloned[text.length] = '\0';
                 Font fontToUse = raylibFonts[renderCommand.config.textElementConfig.fontId].font;
                 raylib::drawTextEx(fontToUse, cloned, {boundingBox.x, boundingBox.y}, (float)renderCommand.config.textElementConfig.fontSize, (float)renderCommand.config.textElementConfig.letterSpacing, clayToRaylibColor(renderCommand.config.textElementConfig.textColor));
@@ -389,7 +428,7 @@ fn void raylibRender(RenderCommandArray renderCommands)
                 if (!customElement) continue;
                 switch (customElement.type) {
                     case CustomLayoutElementType.MODEL_3D: {
-                        clay::BoundingBox rootBox = renderCommands.data[0].boundingBox;
+                        ClayBoundingBox rootBox = renderCommands.data[0].boundingBox;
                         float scaleValue = $$min($$min(1f, 768f / rootBox.height) * $$max(1f, rootBox.width / 1024f), 1.5f);
                         Ray positionRay = getScreenToWorldPointWithZDistance({ renderCommand.boundingBox.x + renderCommand.boundingBox.width / 2, renderCommand.boundingBox.y + (renderCommand.boundingBox.height / 2) + 20 }, raylibCamera, (int)$$round(rootBox.width), (int)$$round(rootBox.height), 140);
                         raylib::beginMode3D(raylibCamera);
@@ -402,8 +441,7 @@ fn void raylibRender(RenderCommandArray renderCommands)
                 break;
             }
             default: {
-                std::io::printfn("ERROR: unhandled render command.");
-                // std::thread::exit(1); TODO: maybe make a workout for this
+                // std::io::printfn("ERROR: unhandled render command."); TODO: maybe make a workout for this
             }
         }
     }
