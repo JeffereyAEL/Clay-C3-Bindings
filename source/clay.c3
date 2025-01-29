@@ -1,23 +1,83 @@
 module clay;
 
-import std::core::cinterop;
-import std::io @norecurse;
-import carray;
+import clay::carray;
 
-def UIntArray = carray::Array(<uint>) @private;
+macro @clay(...; @body()) @builtin
+{
+    clay::openElement(); 
+    $for (var $i = 0; $i < $vacount; $i++)
+        $vaexpr[$i]; // If you get an error here consisder the @body[...]() macros
+    $endfor
+    clay::elementPostConfiguration();
+    @body();
+    clay::closeElement();
+}
+
+macro text(String text, TextElementConfig *config) { clay::openTextElement({text.len, text}, config); }
+
+<*Provides you conditional calls (eg #booleanCondition ? #doA : 0) within the condifuration of @clay(...)*>
+macro @bodyIf(#condition, #ifRes) { if (#condition) { #ifRes; } }
+
+<*Provides you conditional calls (eg #booleanCondition ? #doA : #doB) within the condifuration of @clay(...)*>
+macro @bodyIfElse(#condition, #ifRes, #elseRes) { if (#condition) { #ifRes; } else { #elseRes; } }
+
+// <*Facilitates non-method calls (eg { #doWhatever }, { #booleanExpression ? #doA : #doB}, etc.) within the parameters of @clay(...)*>
+// macro @inline(; @body()) { @body(); }
+
+<*attaches a RectangleElementConfig to the clay element when called within @clay(...)*>
+macro rectangle(RectangleElementConfig config) { clay::attachElementConfig({ .rectangleElementConfig = clay::storeRectangleElementConfig(config) }, clay::ELEMENT_CONFIG_TYPE_RECTANGLE ); }
+
+<*attaches a LayoutConfig to the clay element when called within @clay(...)*>
+macro layout(LayoutConfig config) { clay::attachLayoutConfig( clay::storeLayoutConfig(config) ); }
+
+<*attaches a LayoutConfig to the clay element when called within @clay(...)*>
+macro scroll(ScrollElementConfig config) { clay::attachElementConfig({ .scrollElementConfig = clay::storeScrollElementConfig(config) }, clay::ELEMENT_CONFIG_TYPE_SCROLL_CONTAINER ); }
+
+<*attaches a FloatingElementConfig to the clay element when called within @clay(...)*>
+macro floating(FloatingElementConfig config) { clay::attachElementConfig({ .floatingElementConfig = clay::storeFloatingElementConfig(config) }, clay::ELEMENT_CONFIG_TYPE_FLOATING_CONTAINER ); }
+
+<*attaches a BorderElementConfig to the clay element when called within @clay(...)*>
+macro @borderRadiusUni(uint #width, ClayColor #color, float #cornerRadius = 0) { clay::attachElementConfig({ .borderElementConfig = clay::storeBorderElementConfig({ .left = { #width, #color }, .right = { #width, #color }, .top = { #width, #color }, .bottom = { #width, #color }, .#cornerRadius = {#cornerRadius, #cornerRadius, #cornerRadius, #cornerRadius}})}, clay::ELEMENT_CONFIG_TYPE_BORDER_CONTAINER); }
+
+macro id(String idString) { clay::attachId(clay::hashString({idString.len, idString}, 0, 0)); }
+
+macro TextElementConfig* textConfig(TextElementConfig config) { return clay::storeTextElementConfig(config); }
+
+macro SizingAxis sizingFit(float min = 0, float max = float.max) { return { .size.minMax = {min, max}, .type = SizingType.FIT }; }
+
+macro SizingAxis sizingGrow() { return { .size.minMax = {0, 0}, .type = SizingType.GROW }; }
+
+macro SizingAxis sizingFixed(float pixels) { return { .size.minMax = {pixels, pixels}, .type = SizingType.FIXED }; }
+
+macro SizingAxis sizingPercent(float percent) { return { .size.percent = percent, .type = SizingType.PERCENT }; }
+
+macro Padding paddingUni(ushort uniform) { return {uniform, uniform, uniform, uniform}; }
+
+macro Padding padding(ushort horizontal, ushort vertical) { return {horizontal, horizontal, vertical, vertical}; }
+
+macro CornerRadius cornerRadiusUni(float uniform) { return {uniform, uniform, uniform, uniform}; }
+
+macro SizingAxis sizingFitCT(float $min = 0, float $max = float.max) { return { .size.minMax = {$min, $max}, .type = SizingType.FIT }; }
+
+macro SizingAxis sizingFixedCT(float $pixels) { return { .size.minMax = {$pixels, $pixels}, .type = SizingType.FIXED }; }
+
+macro SizingAxis sizingPercentCT(float $percent) { return { .size.percent = $percent, .type = SizingType.PERCENT }; }
+
+macro Padding paddingCT(ushort $a, ushort $b, ushort $c, ushort $d) { return { $a, $b, $c, $d }; }
+
+macro CornerRadius @cornerRadiusUniCT(float #uniform) { return {#uniform, #uniform, #uniform, #uniform}; }
 
 struct ClayString
 {
-    CInt length;
+    int length;
     char *chars;
 }
-
-def ClayStringArray = carray::Array(<ClayString>);
+def ClayStringArray = carray::Array(<ClayString>) @private;
 
 struct Arena
 {
-    CULongLong nextAllocation;
-    CULongLong capacity;
+    uint128 nextAllocation;
+    uint128 capacity;
     char *memory;
 }
 
@@ -36,16 +96,12 @@ struct ClayColor
     float r, g, b, a;
 }
 
-struct BoundingBox
-{
-    float x, y, width, height;
-}
 
 struct ElementId
 {
-    CUInt id;
-    CUInt offset;
-    CUInt baseId;
+    uint id;
+    uint offset;
+    uint baseId;
     ClayString stringId;
 }
 
@@ -56,45 +112,37 @@ struct CornerRadius
     float bottomLeft;
     float bottomRight;
 }
+distinct ElementConfigType                                      @private = char;
+const ElementConfigType ELEMENT_CONFIG_TYPE_NONE                @private = 0;
+const ElementConfigType ELEMENT_CONFIG_TYPE_RECTANGLE           @private = 1;
+const ElementConfigType ELEMENT_CONFIG_TYPE_BORDER_CONTAINER    @private = 2;
+const ElementConfigType ELEMENT_CONFIG_TYPE_FLOATING_CONTAINER  @private = 4;
+const ElementConfigType ELEMENT_CONFIG_TYPE_SCROLL_CONTAINER    @private = 8;
+const ElementConfigType ELEMENT_CONFIG_TYPE_IMAGE               @private = 16;
+const ElementConfigType ELEMENT_CONFIG_TYPE_TEXT                @private = 32;
+const ElementConfigType ELEMENT_CONFIG_TYPE_CUSTOM              @private = 64;
 
-macro CornerRadius @cornerRadius(#uniform)
-{
-    return {#uniform, #uniform, #uniform, #uniform};
-}
-
-distinct ElementConfigType = char;
-const ElementConfigType ELEMENT_CONFIG_TYPE_NONE                = 0;
-const ElementConfigType ELEMENT_CONFIG_TYPE_RECTANGLE           = 1;
-const ElementConfigType ELEMENT_CONFIG_TYPE_BORDER_CONTAINER    = 2;
-const ElementConfigType ELEMENT_CONFIG_TYPE_FLOATING_CONTAINER  = 4;
-const ElementConfigType ELEMENT_CONFIG_TYPE_SCROLL_CONTAINER    = 8;
-const ElementConfigType ELEMENT_CONFIG_TYPE_IMAGE               = 16;
-const ElementConfigType ELEMENT_CONFIG_TYPE_TEXT                = 32;
-const ElementConfigType ELEMENT_CONFIG_TYPE_CUSTOM              = 64;
-
-// Element Configs ---------------------------
-// Layout
-enum LayoutDirection : char 
+enum LayoutDirection : char @export 
 {
     LEFT_TO_RIGHT,
     TOP_TO_BOTTOM,
 }
 
-enum AlignX : char 
+enum AlignX : char @export 
 {
     LEFT,
     RIGHT,
     CENTER,
 }
 
-enum AlignY : char 
+enum AlignY : char @export 
 {
     TOP,
     BOTTOM,
     CENTER,
 }
 
-enum SizingType : char 
+enum SizingType : char @export 
 {
     FIT,
     GROW,
@@ -124,26 +172,6 @@ struct SizingAxis
     SizingType type;
 }
 
-macro SizingAxis @sizingFit()
-{
-    return { .size.minMax = {0, 0}, .type = SizingType.FIT };
-}
-
-macro SizingAxis @sizingGrow()
-{
-    return { .size.minMax = {0, 0}, .type = SizingType.GROW }; 
-}
-
-macro SizingAxis @sizingFixed(#pixels)
-{
-    return { .size.minMax = {#pixels, #pixels}, .type = SizingType.FIXED };
-}
-
-macro SizingAxis @sizingPercent(#percent)
-{
-    return { .size.percent = #percent, .type = SizingType.PERCENT };
-}
-
 struct Sizing
 {
     SizingAxis width;
@@ -152,33 +180,22 @@ struct Sizing
 
 struct Padding
 {
-    CUShort left;
-    CUShort right;
-    CUShort top;
-    CUShort bottom;
+    ushort left;
+    ushort right;
+    ushort top;
+    ushort bottom;
 }
 
-
-macro Padding @paddingUni(#uniform)
-{
-    return {#uniform, #uniform, #uniform, #uniform};
-}
-
-macro Padding @padding(#horizontal, #vertical) 
-{
-    return {#horizontal, #horizontal, #vertical, #vertical};
-}
-
-struct LayoutConfig (IConfig)
+struct LayoutConfig
 {
     Sizing sizing;
     Padding padding;
-    CUShort childGap;
+    ushort childGap;
     ChildAlignment childAlignment;
     LayoutDirection layoutDirection;
 }
 
-struct RectangleElementConfig (IConfig)
+struct RectangleElementConfig
 {
     ClayColor color;
     CornerRadius cornerRadius;
@@ -187,7 +204,7 @@ struct RectangleElementConfig (IConfig)
     // #endif
 }
 
-enum WrapMode
+enum WrapMode @export
 {
     WORDS,
     NEWLINES,
@@ -197,10 +214,10 @@ enum WrapMode
 struct TextElementConfig
 {
     ClayColor textColor;
-    CUShort fontId;
-    CUShort fontSize;
-    CUShort letterSpacing;
-    CUShort lineHeight;
+    ushort fontId;
+    ushort fontSize;
+    ushort letterSpacing;
+    ushort lineHeight;
     WrapMode wrapMode;
     // #ifdef CLAY_EXTEND_CONFIG_TEXT
     // CLAY_EXTEND_CONFIG_TEXT
@@ -216,7 +233,7 @@ struct ImageElementConfig
     // #endif
 }
 
-enum AttachPoint : char
+enum AttachPoint : char @export
 {
     LEFT_TOP,
     LEFT_CENTER,
@@ -235,19 +252,19 @@ struct FloatingAttachPoints
     AttachPoint parent;
 }
 
-enum PointerCaptureMode
+enum PointerCaptureMode @export
 {
     CAPTURE,
-    PARENT, 
     // MODE_PASSTHROUGH,
+    PARENT, 
 }
 
 struct FloatingElementConfig
 {
     ClayVector2 offset;
     Dimensions expand;
-    CUShort zIndex;
-    CUInt parentId;
+    ushort zIndex;
+    uint parentId;
     FloatingAttachPoints attachment;
     PointerCaptureMode pointerCaptureMode;
 }
@@ -271,7 +288,7 @@ struct ScrollElementConfig
 // Border
 struct Border
 {
-    CUInt width;
+    uint width;
     ClayColor color;
 }
 
@@ -305,7 +322,33 @@ struct ElementConfig
     ElementConfigUnion config;
 }
 
-// Miscellaneous Structs & Enums ---------------------------------
+struct ClayBoundingBox
+{
+    float x, y, width, height;
+}
+
+enum RenderCommandType : char @export
+{
+    NONE,
+    RECTANGLE,
+    BORDER,
+    TEXT,
+    IMAGE,
+    SCISSOR_START,
+    SCISSOR_END,
+    CUSTOM,
+}
+
+struct RenderCommand
+{
+    ClayBoundingBox boundingBox;
+    ElementConfigUnion config;
+    ClayString text;
+    uint id;
+    RenderCommandType commandType;
+}
+def RenderCommandArray = carray::Array(<RenderCommand>);
+
 struct ScrollContainerData
 {
     // Note: This is a pointer to the real internal scroll position, mutating it may cause a change in final layout.
@@ -320,35 +363,12 @@ struct ScrollContainerData
 
 struct ElementData
 {
-    BoundingBox boundingBox;
+    ClayBoundingBox boundingBox;
     // Indicates whether an actual Element matched the provided ID or if the default struct was returned.
     bool found;
 }
 
-enum RenderCommandType : char
-{
-    NONE,
-    RECTANGLE,
-    BORDER,
-    TEXT,
-    IMAGE,
-    SCISSOR_START,
-    SCISSOR_END,
-    CUSTOM,
-}
-
-struct RenderCommand
-{
-    BoundingBox boundingBox;
-    ElementConfigUnion config;
-    ClayString text;
-    CUInt id;
-    RenderCommandType commandType;
-}
-
-def RenderCommandArray = carray::Array(<RenderCommand>);
-
-enum PointerState
+enum PointerState @export
 {
     PRESSED_THIS_FRAME,
     PRESSED,
@@ -362,7 +382,11 @@ struct PointerData
     PointerState state;
 }
 
-enum ErrorType
+def OnHoverEvent = fn void(ElementId elementId, PointerData pointerData, iptr userData);
+def MeasureTextFunc = fn Dimensions(ClayString *text, TextElementConfig *config);
+def QueryScrollOffsetFunc = fn ClayVector2(uint elementId);
+
+enum ErrorType @export
 {
     TEXT_MEASUREMENT_FUNCTION_NOT_PROVIDED,
     ARENA_CAPACITY_EXCEEDED,
@@ -377,7 +401,7 @@ struct ErrorData
 {
     ErrorType errorType;
     ClayString errorText;
-    CULongLong userData;
+    uint128 userData;
 }
 
 def ErrorHandleFunc = fn void(ErrorData errorText);
@@ -385,263 +409,79 @@ def ErrorHandleFunc = fn void(ErrorData errorText);
 struct ErrorHandler
 {
     ErrorHandleFunc errorHandler;
-    CULongLong userData;
+    uint128 userData;
 }
 
-struct BooleanWarnings
-{
-    bool maxElementsExceeded;
-    bool maxRenderCommandsExceeded;
-    bool maxTextMeasureCacheExceeded;
+distinct Context = void;
+
+// =====================
+// ===== FUNCTIONS =====
+// =====================
+
+// ===== Public Clay API C3 Functions (String replacement) =====
+fn ElementId getElementIdWithIndex(String idString, uint index)                                                                                          @export @inline
+{ return __getElementIdWithIndex({idString.len, idString}, (uint)index); }
+fn ElementId getElementId(String idString)                                                                                                               @export @inline
+{ return __getElementId({idString.len, idString}); }
+
+// ===== Public Clay API Functions =====
+extern fn uint minMemorySize()                                                                              @extern("Clay_MinMemorySize")                       @wasm @export;
+extern fn Arena createArena(uint capacity, void* offset)                                                    @extern("Clay_CreateArenaWithCapacityAndMemory")    @wasm @export;
+extern fn void setPointerState(ClayVector2 position, bool pointerDown)                                      @extern("Clay_SetPointerState")                     @export;
+extern fn Context* initialize(Arena arena, Dimensions layoutDimensions, ErrorHandler errorHandler)          @extern("Clay_Initialize")                          @wasm @export;
+extern fn Context* getCurrentContext()                                                                      @extern("Clay_GetCurrentContext")                   @export;
+extern fn void setCurrentContext(Context* context)                                                          @extern("Clay_SetCurrentContext")                   @export;
+extern fn void updateScrollContainer(bool enableDragScrolling, ClayVector2 scrollDelta, float deltaTime)    @extern("Clay_UpdateScrollContainers")              @export;             
+extern fn void setLayoutDimensions (Dimensions dimensions)                                                  @extern("Clay_SetLayoutDimensions")                 @export;
+extern fn ElementData getElementData(ElementId id)                                                          @extern("Clay_GetElementData")                      @export;
+extern fn bool hovered()                                                                                    @extern("Clay_Hovered")                             @export;
+extern fn void onHover(OnHoverEvent onHover, iptr userData)                                                 @extern("Clay_OnHover")                             @export;                                        
+extern fn bool pointerOver(ElementId elementId)                                                             @extern("Clay_PointerOver")                         @wasm @export;
+extern fn ScrollContainerData getScrollContainerData(ElementId id)                                          @extern("Clay_GetScrollContainerData")              @export;
+extern fn void setMeasureTextFunction(MeasureTextFunc measureText)                                          @extern("Clay_SetMeasureTextFunction")              @export;
+extern fn void setQueryScrollOffsetFunction(QueryScrollOffsetFunc queryScrollOffset)                        @extern("Clay_SetQueryScrollOffsetFunction")        @export;
+extern fn RenderCommand * RenderCommandArray.get(RenderCommandArray* array, int index)                      @extern("Clay_RenderCommandArray_Get")              @export;
+extern fn void setDebugModeEnabled(bool enabled)                                                            @extern("Clay_SetDebugModeEnabled")                 @export;
+extern fn bool isDebugModeEnabled()                                                                         @extern("Clay_IsDebugModeEnabled")                  @export;
+extern fn void setCullingEnabled(bool enabled)                                                              @extern("Clay_SetCullingEnabled")                   @export;
+extern fn int getMaxMeasuredTextCachedWordCount()                                                           @extern("Clay_GetMaxElementCount")                  @export;
+extern fn void setMaxElementCount(int maxElementCount)                                                      @extern("Clay_SetMaxElementCount")                  @export;
+extern fn int getMaxElementCount()                                                                          @extern("Clay_GetMaxMeasureTextCacheWordCount")     @export;
+extern fn void setMaxMeasureTextCacheWordCount(int maxMeasureTextCacheWordCount)                            @extern("Clay_SetMaxMeasureTextCacheWordCount")     @export;
+extern fn void resetMeasureTextCache()                                                                      @extern("Clay_ResetMeasureTextCache")               @export;
+extern fn void beginLayout()                                                                                @extern("Clay_BeginLayout")                         @export;
+extern fn RenderCommandArray endLayout()                                                                    @extern("Clay_EndLayout")                           @export;
+
+// ===== (NEW) Internal Clay API Functions (String replacement) =====
+extern fn ElementId __getElementIdWithIndex(ClayString idString, uint index)                                @extern("Clay_GetElementIdWithIndex")               @export @private;
+extern fn ElementId __getElementId(ClayString idString)                                                     @extern("Clay_GetElementId")                        @export @private;
+
+// ===== Internal Clay API Functions =====
+extern fn void openElement()                                                                                @extern ("Clay__OpenElement")                       @export @private;
+extern fn void closeElement()                                                                               @extern("Clay__CloseElement")                       @export @private;
+extern fn void openTextElement(ClayString text, TextElementConfig *textConfig)                              @extern("Clay__OpenTextElement")                    @export @private;
+extern fn void elementPostConfiguration()                                                                   @extern("Clay__ElementPostConfiguration")           @export @private;
+extern fn LayoutConfig * storeLayoutConfig(LayoutConfig config)                                             @extern("Clay__StoreLayoutConfig")                  @export @private;
+extern fn void attachId(ElementId id)                                                                       @extern("Clay__AttachId")                           @export @private;
+extern fn void attachLayoutConfig(LayoutConfig *config)                                                     @extern("Clay__AttachLayoutConfig")                 @export @private;
+extern fn void attachElementConfig(ElementConfigUnion config, ElementConfigType type)                       @extern("Clay__AttachElementConfig")                @export @private;
+extern fn RectangleElementConfig * storeRectangleElementConfig(RectangleElementConfig config)               @extern("Clay__StoreRectangleElementConfig")        @export @private;
+extern fn TextElementConfig * storeTextElementConfig(TextElementConfig config)                              @extern("Clay__StoreTextElementConfig")             @export @private;
+extern fn ImageElementConfig * storeImageElementConfig(ImageElementConfig config)                           @extern("Clay__StoreImageElementConfig")            @export @private;
+extern fn FloatingElementConfig * storeFloatingElementConfig(FloatingElementConfig config)                  @extern("Clay__StoreFloatingElementConfig")         @export @private;
+extern fn CustomElementConfig * storeCustomElementConfig(CustomElementConfig config)                        @extern("Clay__StoreCustomElementConfig")           @export @private;
+extern fn ScrollElementConfig * storeScrollElementConfig(ScrollElementConfig config)                        @extern("Clay__StoreScrollElementConfig")           @export @private;
+extern fn BorderElementConfig * storeBorderElementConfig(BorderElementConfig config)                        @extern("Clay__StoreBorderElementConfig")           @export @private;
+extern fn ElementId hashString(ClayString key, uint offset, uint seed) 						                @extern("Clay__HashString")                         @export @private;
+extern fn uint getParentElementId()                                                                         @extern("Clay__GetParentElementId")                 @export @private;
+
+// ==========================================================================
+// ===== An internal module for wrapping Struct Array's defined in Clay =====
+// ==========================================================================
+module clay::carray(<ElementType>);
+
+struct Array {
+    int capacity;
+    int length;
+    ElementType *data;
 }
-
-struct Warning
-{
-    ClayString baseMessage;
-    ClayString dynamicMessage;
-}
-
-def WarningArray = carray::Array(<Warning>);
-
-struct LayoutElementChildren
-{ 
-    CInt *elements;
-    CUShort length;
-}
-
-struct LayoutElement
-{
-    union childrenOrTextContent {
-        LayoutElementChildren children;
-        TextElementData *textElementData;
-    }
-    Dimensions dimensions;
-    Dimensions minDimensions;
-    LayoutConfig *layoutConfig;
-    ElementConfigArraySlice elementConfigs;
-    CUInt configsEnabled;
-    CUInt id;
-}
-
-struct WrappedTextLine
-{
-    Dimensions dimensions;
-    ClayString line;
-}
-
-struct WrappedTextLineArraySlice
-{
-	CInt length;
-	WrappedTextLine *internalArray;
-}
-
-struct TextElementData
-{
-    ClayString text;
-    Dimensions preferredDimensions;
-    CInt elementIndex;
-    WrappedTextLineArraySlice wrappedLines;
-}
-
-struct ElementConfigArraySlice
-{
-	CInt length;
-	ElementConfig *internalArray;
-}
-
-
-def DebugElementData = bool[<2>];
-
-struct LayoutElementHashMapItem
-{ 
-    BoundingBox boundingBox;
-    ElementId elementId;
-    LayoutElement* layoutElement;
-    OnHoverEvent onHoverFunction;
-    CLongLong hoverFunctionUserData;
-    CInt nextIndex;
-    CULongLong generation;
-    DebugElementData *debugData;
-}
- 
-struct LayoutElementTreeRoot @private
-{
-    CInt layoutElementIndex;
-    CUInt parentId; // This can be zero in the case of the root layout tree
-    CUInt clipElementId; // This can be zero if there is no clip element
-    CInt zIndex;
-    ClayVector2 pointerOffset; // Only used when scroll containers are managed externally
-}
-
-struct LayoutElementTreeNode @private
-{
-    LayoutElement *layoutElement;
-    ClayVector2 position;
-    ClayVector2 nextChildOffset;
-}
-
-struct MeasuredWord @private
-{
-    CInt startOffset;
-    CInt length;
-    float width;
-    CInt next;
-}
-
-struct MeasureTextCacheItem @private
-{
-    Dimensions unwrappedDimensions;
-    CInt measuredWordsStartIndex;
-    bool containsNewlines;
-    // Hash map data
-    CUInt id;
-    CInt nextIndex;
-    CUInt generation;
-}
-
-def LayoutElementArray = carray::Array(<LayoutElement>);
-def CIntArray = carray::Array(<CInt>);
-def TextElementDataArray = carray::Array(<TextElementData>);
-def RectangleElementConfigArray = carray::Array(<RectangleElementConfig>);
-def TextElementConfigArray = carray::Array(<TextElementConfig>);
-def ImageElementConfigArray = carray::Array(<ImageElementConfig>);
-def FloatingElementConfigArray = carray::Array(<FloatingElementConfig>);
-def ScrollElementConfigArray = carray::Array(<ScrollElementConfig>);
-def CustomElementConfigArray = carray::Array(<CustomElementConfig>);
-def BorderElementConfigArray = carray::Array(<BorderElementConfig>);
-def LayoutElementPointerArray = carray::Array(<LayoutElement*>);
-def LayoutConfigArray = carray::Array(<LayoutConfig>);
-def ElementConfigArray = carray::Array(<ElementConfig>);
-def WrappedTextLineArray = carray::Array(<WrappedTextLine>);
-def LayoutElementTreeNodeArray = carray::Array(<LayoutElementTreeNode>);
-def LayoutElementTreeRootArray = carray::Array(<LayoutElementTreeRoot>);
-def LayoutElementHashMapItemArray = carray::Array(<LayoutElementHashMapItem>);
-def MeasureTextCacheItemArray = carray::Array(<MeasureTextCacheItem>);
-def MeasuredWordArray = carray::Array(<MeasuredWord>);
-def ElementIdArray = carray::Array(<ElementId>);
-def ScrollContainerDataInternalArray = carray::Array(<ScrollContainerData>);
-def BoolArray = carray::Array(<bool>);
-def CharArray = carray::Array(<char>);
-def DebugElementDataArray = carray::Array(<DebugElementData>);
-
-struct Context @extern ("Clay_Context") 
-{
-    CInt maxElementCount;
-    CInt maxMeasureTextCacheWordCount;
-    bool warningsEnabled;
-    ErrorHandler errorHandler;
-    BooleanWarnings booleanWarnings;
-    WarningArray warnings;
-
-    PointerData pointerInfo;
-    Dimensions layoutDimensions;
-    ElementId dynamicElementIndexBaseHash;
-    CUInt dynamicElementIndex;
-    bool debugModeEnabled;
-    bool disableCulling;
-    bool externalScrollHandlingEnabled;
-    CUInt debugSelectedElementId;
-    CUInt generation;
-    CULongLong arenaResetOffset;
-    Arena internalArena;
-
-    // Layout Elements / Render Commands
-    LayoutElementArray layoutElements;
-    RenderCommandArray renderCommands;
-    CIntArray openLayoutElementStack;
-    CIntArray layoutElementChildren;
-    CIntArray layoutElementChildrenBuffer;
-    TextElementDataArray textElementData;
-    LayoutElementPointerArray imageElementPointers;
-    CIntArray reusableElementIndexBuffer;
-    CIntArray layoutElementClipElementIds;
-
-    // Configs
-    LayoutConfigArray layoutConfigs;
-    ElementConfigArray elementConfigBuffer;
-    ElementConfigArray elementConfigs;
-    RectangleElementConfigArray rectangleElementConfigs;
-    TextElementConfigArray textElementConfigs;
-    ImageElementConfigArray imageElementConfigs;
-    FloatingElementConfigArray floatingElementConfigs;
-    ScrollElementConfigArray scrollElementConfigs;
-    CustomElementConfigArray customElementConfigs;
-    BorderElementConfigArray borderElementConfigs;
-    
-    // Misc Data Structures
-    ClayStringArray layoutElementIdStrings;
-    WrappedTextLineArray wrappedTextLines;
-    LayoutElementTreeNodeArray layoutElementTreeNodeArray1;
-    LayoutElementTreeRootArray layoutElementTreeRoots;
-    LayoutElementHashMapItemArray layoutElementsHashMapInternal;
-    CIntArray layoutElementsHashMap;
-    MeasureTextCacheItemArray measureTextHashMapInternal;
-    CIntArray measureTextHashMapInternalFreeList;
-    CIntArray measureTextHashMap;
-    MeasuredWordArray measuredWords;
-    CIntArray measuredWordsFreeList;
-    CIntArray openClipElementStack;
-    ElementIdArray pointerOverIds;
-    ScrollContainerDataInternalArray scrollContainerDatas;
-    BoolArray treeNodeVisited;
-    CharArray dynamicStringData;
-    DebugElementDataArray debugElementData;
-}
-
-def OnHoverEvent = fn void(ElementId elementId, PointerData pointerData, CLongLong userData);
-def MeasureTextFunc = fn Dimensions(ClayString *text, TextElementConfig *config);
-def QueryScrollOffsetFunc = fn ClayVector2(CUInt elementId);
-
-// Function Forward Declarations ---------------------------------
-// Public API functions ---
-extern fn CUInt minMemorySize() @extern("Clay_MinMemorySize");
-extern fn Arena createArena(CUInt capacity, void* offset) @extern("Clay_CreateArenaWithCapacityAndMemory");
-extern fn void setPointerState(ClayVector2 position, bool pointerDown) @extern("Clay_SetPointerState");
-extern fn Context* initialize(Arena arena, Dimensions layoutDimensions, ErrorHandler errorHandler) @extern("Clay_Initialize");
-extern fn Context* getCurrentContext() @extern("Clay_GetCurrentContext");
-extern fn void setCurrentContext(Context* context) @extern("Clay_SetCurrentContext");
-extern fn void updateScrollContainer(bool enableDragScrolling, ClayVector2 scrollDelta, float deltaTime) @extern("Clay_UpdateScrollContainers");
-extern fn void setLayoutDimensions (Dimensions dimensions) @extern("Clay_SetLayoutDimensions");
-extern fn ElementId getElementIdWithIndex(ClayString idString, CUInt index) @extern("Clay_GetElementIdWithIndex");
-extern fn ElementData getElementData(ElementId id) @extern("Clay_GetElementData");
-extern fn bool hovered() @extern("Clay_Hovered");
-extern fn void onHovered(OnHoverEvent onHover, CLongLong userData) @extern("Clay_OnHover");
-extern fn bool pointerOver(ElementId elementId) @extern("Clay_PointerOver");
-extern fn ScrollContainerData getScrollContainerData(ElementId id) @extern("Clay_GetScrollContainerData");
-extern fn void setMeasureTextFunction(MeasureTextFunc measureText) @extern("Clay_SetMeasureTextFunction");
-extern fn void setQueryScrollOffsetFunction(QueryScrollOffsetFunc queryScrollOffset) @extern("Clay_SetQueryScrollOffsetFunction");
-extern fn RenderCommand * RenderCommandArray.get(RenderCommandArray* array, CInt index) @extern("Clay_RenderCommandArray_Get");
-extern fn void setDebugModeEnabled(bool enabled) @extern("Clay_SetDebugModeEnabled");
-extern fn bool isDebugModeEnabled() @extern("Clay_IsDebugModeEnabled");
-extern fn void setCullingEnabled(bool enabled) @extern("Clay_SetCullingEnabled");
-extern fn CInt getMaxMeasuredTextCachedWordCount() @extern("Clay_GetMaxElementCount");
-extern fn void setMaxElementCount(CInt maxElementCount) @extern("Clay_SetMaxElementCount");
-extern fn CInt getMaxElementCount() @extern("Clay_GetMaxMeasureTextCacheWordCount");
-extern fn void setMaxMeasureTextCacheWordCount(CInt maxMeasureTextCacheWordCount) @extern("Clay_SetMaxMeasureTextCacheWordCount");
-extern fn void resetMeasureTextCache() @extern("Clay_ResetMeasureTextCache");
-
-// External API functions that now have wrappers to incporate C3's builtin 'String' type
-extern fn ElementId getElementId(ClayString idString) @extern("Clay_GetElementId") @private;
-
-// External API functions that now have wrappers for ClayIterator behaviour
-extern fn void beginLayout() @extern("Clay_BeginLayout");
-extern fn RenderCommandArray endLayout() @extern("Clay_EndLayout");
-
-// Internal API functions required by macros
-extern fn void openElement() @extern ("Clay__OpenElement") @private;
-extern fn void closeElement() @extern("Clay__CloseElement") @private;
-extern fn void openTextElement(ClayString text, TextElementConfig *textConfig) @extern("Clay__OpenTextElement") @private;
-extern fn void elementPostConfiguration() @extern("Clay__ElementPostConfiguration") @private;
-extern fn LayoutConfig * storeLayoutConfig(LayoutConfig config) @extern("Clay__StoreLayoutConfig") @private;
-extern fn void attachId(ElementId id) @extern("Clay__AttachId") @private;
-extern fn void attachLayoutConfig(LayoutConfig *config) @extern("Clay__AttachLayoutConfig") @private;
-extern fn void attachElementConfig(ElementConfigUnion config, ElementConfigType type) @extern("Clay__AttachElementConfig") @private;
-extern fn RectangleElementConfig * storeRectangleElementConfig(RectangleElementConfig config) @extern("Clay__StoreRectangleElementConfig") @private;
-extern fn TextElementConfig * storeTextElementConfig(TextElementConfig config) @extern("Clay__StoreTextElementConfig") @private;
-extern fn ImageElementConfig * storeImageElementConfig(ImageElementConfig config) @extern("Clay__StoreImageElementConfig") @private;
-extern fn FloatingElementConfig * storeFloatingElementConfig(FloatingElementConfig config) @extern("Clay__StoreFloatingElementConfig") @private;
-extern fn CustomElementConfig * storeCustomElementConfig(CustomElementConfig config) @extern("Clay__StoreCustomElementConfig") @private;
-extern fn ScrollElementConfig * storeScrollElementConfig(ScrollElementConfig config) @extern("Clay__StoreScrollElementConfig") @private;
-extern fn BorderElementConfig * storeBorderElementConfig(BorderElementConfig config) @extern("Clay__StoreBorderElementConfig") @private;
-extern fn ElementId hashString(ClayString key, CUInt offset, CUInt seed) @extern("Clay__HashString") @private;
-extern fn CUInt getParentElementId() @extern("Clay__GetParentElementId") @private;

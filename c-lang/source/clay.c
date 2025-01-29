@@ -13,13 +13,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+
 // -----------------------------------------
 // HEADER DECLARATIONS ---------------------
 // -----------------------------------------
 
 #ifndef CLAY_HEADER
 #define CLAY_HEADER
-#define CLAY_IMPLEMENTATION
 
 #if !( \
     (defined(__cplusplus) && __cplusplus >= 202002L) || \
