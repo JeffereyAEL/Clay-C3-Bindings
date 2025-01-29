@@ -12,10 +12,10 @@ Traditional Clay C Macro System
 /* FILTER BUTTON */
 CLAY(
     CLAY_ID("FilterButton"),
-    CLAY_RECTANGLE({
+    Clay_Hovered() ? CLAY_RECTANGLE({
         .color = Clay_Hovered() ? FIRE_ORANGE : (Clay_Color){80, 25, 200, 255},
         .cornerRadius = 8,
-    }),
+    }) : 0,
     CLAY_LAYOUT({
         .sizing = {
             .width = CLAY_SIZING_FIT(),
@@ -32,10 +32,11 @@ Clay C3 Macro System
 /* FILTER BUTTON */
 clay::clay(
     clay::id("FilterButton"),
-    clay::rectangle({
-        .color = clay::hovered() ? FIRE_ORANGE : {80, 25, 200, 255},
-        .cornerRadius = clay::cornerRadiusUni(8)
-    }),
+    clay::@bodyIf(clay::hovered(), clay::rectangle({
+            .color = clay::hovered() ? FIRE_ORANGE : {80, 25, 200, 255},
+            .cornerRadius = clay::cornerRadiusUni(8)
+        })
+    ),
     clay::layout({
         .sizing = {
             .width = clay::sizingFit(),
