@@ -67,6 +67,7 @@ Clay C3 Macro System
 - - - *`run` executes the build result from the project directory, somehow. This means that `run` will look for the resource folder in [c3](../c3), while `build` will look for it in [build](build)*)
 
 ## RESOURCES:
+### - [Clay](https://github.com/nicbarker/clay.git) (A high preformace layout library in C)
 ### - [C3](https://github.com/c3lang/c3c.git) (A C-a-like, that aims to bring modern language QA features and a revamped Macro system to C)
 ### - [Raylib](https://github.com/raysan5/raylib.git) (C Videogame and Graphical API)
 ### - [Lexend](https://github.com/googlefonts/lexend.git) (Accessible/ Dyslexic Friendly Font)
