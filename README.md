@@ -1,3 +1,4 @@
+# repurposing this repo since I moved clay-bindnigs themselves into a fork of Clay
 # Clay-C3-Bindings
 C3 Bindings for [Clay](https://github.com/nicbarker/clay.git), a UI layout library written in C
 
