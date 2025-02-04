@@ -1,4 +1,4 @@
-module raylib;
+module raylib5::rl;
 
 const float PI = 3.14159265358979323846f;
 const float DEG2RAD = PI / 180.0f;
@@ -687,68 +687,68 @@ $assert(NPatchLayout.NINE_PATCH.ordinal == 0);
 
 // Callbacks to hook some internal functions
 // WARNING: This callbacks are intended for advance users
-def LoadFileDataCallback = fn char* (char* fileName, uint* bytesRead);                     // FileIO: Load binary data
-def SaveFileDataCallback = fn bool(char* fileName, void* data, uint bytesToWrite);         // FileIO: Save binary data
-def LoadFileTextCallback = fn char*(char* fileName);                                       // FileIO: Load text data
-def SaveFileTextCallback = fn bool(char* fileName, char* text);                            // FileIO: Save text data
+def LoadFileDataCallback = fn char* (char* fileName, uint* bytesRead);                      // FileIO: Load binary data
+def SaveFileDataCallback = fn bool(char* fileName, void* data, uint bytesToWrite);          // FileIO: Save binary data
+def LoadFileTextCallback = fn char*(char* fileName);                                        // FileIO: Load text data
+def SaveFileTextCallback = fn bool(char* fileName, char* text);                             // FileIO: Save text data
 
 // Window-related functions
-fn void initWindow(int width, int height, char* title) @extern("InitWindow");              // Initialize window and OpenGL context
-fn void closeWindow() @extern("CloseWindow");                                              // Close window and unload OpenGL context
-fn bool windowShouldClose() @extern("WindowShouldClose");                                  // Check if KEY_ESCAPE pressed or Close icon pressed
-fn bool isWindowReady() @extern("IsWindowReady");                                          // Check if window has been initialized successfully
-fn bool isWindowFullscreen() @extern("IsWindowFullscreen");                                // Check if window is currently fullscreen
-fn bool isWindowHidden() @extern("IsWindowHidden");                                        // Check if window is currently hidden (only PLATFORM_DESKTOP)
-fn bool isWindowMinimized() @extern("IsWindowMinimized");                                  // Check if window is currently minimized (only PLATFORM_DESKTOP)
-fn bool isWindowMaximized() @extern("IsWindowMaximized");                                  // Check if window is currently maximized (only PLATFORM_DESKTOP)
-fn bool isWindowFocused() @extern("IsWindowFocused");                                      // Check if window is currently focused (only PLATFORM_DESKTOP)
-fn bool isWindowResized() @extern("IsWindowResized");                                      // Check if window has been resized last frame
-fn bool isWindowState(ConfigFlag flag) @extern("IsWindowState");                           // Check if one specific window flag is enabled
-fn void setWindowState(ConfigFlag flag) @extern("SetWindowState");                         // Set window configuration state using flags (only PLATFORM_DESKTOP)
-fn void clearWindowState(ConfigFlag flags) @extern("ClearWindowState");                    // Clear window configuration state flags
-fn void toggleFullscreen() @extern("ToggleFullscreen");                                    // Toggle window state: fullscreen/windowed (only PLATFORM_DESKTOP)
-fn void toggleBorderlessWindowed() @extern("ToggleBorderlessWindowed");			   // Toggle window state: borderless windowed (only PLATFORM_DESKTOP)
-fn void maximizeWindow() @extern("MaximizeWindow");                                        // Set window state: maximized, if resizable (only PLATFORM_DESKTOP)
-fn void minimizeWindow() @extern("MinimizeWindow");                                        // Set window state: minimized, if resizable (only PLATFORM_DESKTOP)
-fn void restoreWindow() @extern("RestoreWindow");                                          // Set window state: not minimized/maximized (only PLATFORM_DESKTOP)
-fn void setWindowIcon(Image image) @extern("SetWindowIcon");                               // Set icon for window (only PLATFORM_DESKTOP)
-fn void setWindowIcons(Image* images, int count) @extern("SetWindowIcons");                // Set icon for window (multiple images, RGBA 32bit, only PLATFORM_DESKTOP)
-fn void setWindowTitle(ZString title) @extern("SetWindowTitle");                             // Set title for window (only PLATFORM_DESKTOP)
-fn void setWindowPosition(int x, int y) @extern("SetWindowPosition");                      // Set window position on screen (only PLATFORM_DESKTOP)
-fn void setWindowMonitor(int monitor) @extern("SetWindowMonitor(int monitor");             // Set monitor for the current window (fullscreen mode)
-fn void setWindowMinSize(int width, int height) @extern("SetWindowMinSize");               // Set window minimum dimensions (for FLAG_WINDOW_RESIZABLE)
-fn void setWindowMaxSize(int width, int height) @extern("SetWindowMaxSize");               // Set window maximum dimensions (for FLAG_WINDOW_RESIZABLE)
-fn void setWindowSize(int width, int height) @extern("SetWindowSize");                     // Set window dimensions
-fn void setWindowOpacity(float opacity) @extern("SetWindowOpacity");                       // Set window opacity [0.0f..1.0f] (only PLATFORM_DESKTOP)
-fn void* getWindowHandle() @extern("GetWindowHandle");                                     // Get native window handle
-fn int getScreenWidth() @extern("GetScreenWidth");                                         // Get current screen width
-fn int getScreenHeight() @extern("GetScreenHeight");                                       // Get current screen height
-fn int getRenderWidth() @extern("GetRenderWidth");                                         // Get current render width (it considers HiDPI)
-fn int getRenderHeight() @extern("GetRenderHeight");                                       // Get current render height (it considers HiDPI)
-fn int getMonitorCount() @extern("GetMonitorCount");                                       // Get number of connected monitors
-fn int getCurrentMonitor() @extern("GetCurrentMonitor");                                   // Get current connected monitor
-fn Vector2 getMonitorPosition(int monitor) @extern("GetMonitorPosition");                  // Get specified monitor position
-fn int getMonitorWidth(int monitor) @extern("GetMonitorWidth");                            // Get specified monitor width (max available by monitor)
-fn int getMonitorHeight(int monitor) @extern("GetMonitorHeight");                          // Get specified monitor height (max available by monitor)
-fn int getMonitorPhysicalWidth(int monitor) @extern("GetMonitorPhysicalWidth");            // Get specified monitor physical width in millimetres
-fn int getMonitorPhysicalHeight(int monitor) @extern("GetMonitorPhysicalHeight");          // Get specified monitor physical height in millimetres
-fn int getMonitorRefreshRate(int monitor) @extern("GetMonitorRefreshRate");                // Get specified monitor refresh rate
-fn Vector2 getWindowPosition() @extern("GetWindowPosition");                               // Get window position XY on monitor
-fn Vector2 getWindowScaleDPI() @extern("GetWindowScaleDPI");                               // Get window scale DPI factor
-fn ZString getMonitorName(int monitor) @extern("GetMonitorName");                          // Get the human-readable, UTF-8 encoded name of the primary monitor
-fn void setClipboardText(ZString text) @extern("SetClipboardText");                        // Set clipboard text content
-fn ZString getClipboardText() @extern("GetClipboardText");                                 // Get clipboard text content
-fn Image getClipboardImage() @extern("GetClipboardImage");                                 // Get clipboard image content
-fn void enableEventWaiting() @extern("EnableEventWaiting");                                // Enable waiting for events on EndDrawing(), no automatic event polling
-fn void disableEventWaiting() @extern("DisableEventWaiting");                              // Disable waiting for events on EndDrawing(), automatic events polling
+fn void initWindow(int width, int height, char* title) @extern("InitWindow");               // Initialize window and OpenGL context
+fn void closeWindow() @extern("CloseWindow");                                               // Close window and unload OpenGL context
+fn bool windowShouldClose() @extern("WindowShouldClose");                                   // Check if KEY_ESCAPE pressed or Close icon pressed
+fn bool isWindowReady() @extern("IsWindowReady");                                           // Check if window has been initialized successfully
+fn bool isWindowFullscreen() @extern("IsWindowFullscreen");                                 // Check if window is currently fullscreen
+fn bool isWindowHidden() @extern("IsWindowHidden");                                         // Check if window is currently hidden (only PLATFORM_DESKTOP)
+fn bool isWindowMinimized() @extern("IsWindowMinimized");                                   // Check if window is currently minimized (only PLATFORM_DESKTOP)
+fn bool isWindowMaximized() @extern("IsWindowMaximized");                                   // Check if window is currently maximized (only PLATFORM_DESKTOP)
+fn bool isWindowFocused() @extern("IsWindowFocused");                                       // Check if window is currently focused (only PLATFORM_DESKTOP)
+fn bool isWindowResized() @extern("IsWindowResized");                                       // Check if window has been resized last frame
+fn bool isWindowState(ConfigFlag flag) @extern("IsWindowState");                            // Check if one specific window flag is enabled
+fn void setWindowState(ConfigFlag flag) @extern("SetWindowState");                          // Set window configuration state using flags (only PLATFORM_DESKTOP)
+fn void clearWindowState(ConfigFlag flags) @extern("ClearWindowState");                     // Clear window configuration state flags
+fn void toggleFullscreen() @extern("ToggleFullscreen");                                     // Toggle window state: fullscreen/windowed (only PLATFORM_DESKTOP)
+fn void toggleBorderlessWindowed() @extern("ToggleBorderlessWindowed");			            // Toggle window state: borderless windowed (only PLATFORM_DESKTOP)
+fn void maximizeWindow() @extern("MaximizeWindow");                                         // Set window state: maximized, if resizable (only PLATFORM_DESKTOP)
+fn void minimizeWindow() @extern("MinimizeWindow");                                         // Set window state: minimized, if resizable (only PLATFORM_DESKTOP)
+fn void restoreWindow() @extern("RestoreWindow");                                           // Set window state: not minimized/maximized (only PLATFORM_DESKTOP)
+fn void setWindowIcon(Image image) @extern("SetWindowIcon");                                // Set icon for window (only PLATFORM_DESKTOP)
+fn void setWindowIcons(Image* images, int count) @extern("SetWindowIcons");                 // Set icon for window (multiple images, RGBA 32bit, only PLATFORM_DESKTOP)
+fn void setWindowTitle(ZString title) @extern("SetWindowTitle");                            // Set title for window (only PLATFORM_DESKTOP)
+fn void setWindowPosition(int x, int y) @extern("SetWindowPosition");                       // Set window position on screen (only PLATFORM_DESKTOP)
+fn void setWindowMonitor(int monitor) @extern("SetWindowMonitor(int monitor");              // Set monitor for the current window (fullscreen mode)
+fn void setWindowMinSize(int width, int height) @extern("SetWindowMinSize");                // Set window minimum dimensions (for FLAG_WINDOW_RESIZABLE)
+fn void setWindowMaxSize(int width, int height) @extern("SetWindowMaxSize");                // Set window maximum dimensions (for FLAG_WINDOW_RESIZABLE)
+fn void setWindowSize(int width, int height) @extern("SetWindowSize");                      // Set window dimensions
+fn void setWindowOpacity(float opacity) @extern("SetWindowOpacity");                        // Set window opacity [0.0f..1.0f] (only PLATFORM_DESKTOP)
+fn void* getWindowHandle() @extern("GetWindowHandle");                                      // Get native window handle
+fn int getScreenWidth() @extern("GetScreenWidth");                                          // Get current screen width
+fn int getScreenHeight() @extern("GetScreenHeight");                                        // Get current screen height
+fn int getRenderWidth() @extern("GetRenderWidth");                                          // Get current render width (it considers HiDPI)
+fn int getRenderHeight() @extern("GetRenderHeight");                                        // Get current render height (it considers HiDPI)
+fn int getMonitorCount() @extern("GetMonitorCount");                                        // Get number of connected monitors
+fn int getCurrentMonitor() @extern("GetCurrentMonitor");                                    // Get current connected monitor
+fn Vector2 getMonitorPosition(int monitor) @extern("GetMonitorPosition");                   // Get specified monitor position
+fn int getMonitorWidth(int monitor) @extern("GetMonitorWidth");                             // Get specified monitor width (max available by monitor)
+fn int getMonitorHeight(int monitor) @extern("GetMonitorHeight");                           // Get specified monitor height (max available by monitor)
+fn int getMonitorPhysicalWidth(int monitor) @extern("GetMonitorPhysicalWidth");             // Get specified monitor physical width in millimetres
+fn int getMonitorPhysicalHeight(int monitor) @extern("GetMonitorPhysicalHeight");           // Get specified monitor physical height in millimetres
+fn int getMonitorRefreshRate(int monitor) @extern("GetMonitorRefreshRate");                 // Get specified monitor refresh rate
+fn Vector2 getWindowPosition() @extern("GetWindowPosition");                                // Get window position XY on monitor
+fn Vector2 getWindowScaleDPI() @extern("GetWindowScaleDPI");                                // Get window scale DPI factor
+fn ZString getMonitorName(int monitor) @extern("GetMonitorName");                           // Get the human-readable, UTF-8 encoded name of the primary monitor
+fn void setClipboardText(ZString text) @extern("SetClipboardText");                         // Set clipboard text content
+fn ZString getClipboardText() @extern("GetClipboardText");                                  // Get clipboard text content
+fn Image getClipboardImage() @extern("GetClipboardImage");                                  // Get clipboard image content
+fn void enableEventWaiting() @extern("EnableEventWaiting");                                 // Enable waiting for events on EndDrawing(), no automatic event polling
+fn void disableEventWaiting() @extern("DisableEventWaiting");                               // Disable waiting for events on EndDrawing(), automatic events polling
 
 // Cursor-related functions
 fn void showCursor() @extern("ShowCursor");                                                 // Shows cursor
 fn void hideCursor() @extern("HideCursor");                                                 // Hides cursor
-fn bool isCursorHidden() @extern("IsCursorHidden");                                        // Check if cursor is not visible
+fn bool isCursorHidden() @extern("IsCursorHidden");                                         // Check if cursor is not visible
 fn void enableCursor() @extern("EnableCursor");                                             // Enables cursor (unlock cursor)
 fn void disableCursor() @extern("DisableCursor");                                           // Disables cursor (lock cursor)
-fn bool isCursorOnScreen() @extern("IsCursorOnScreen");                                   // Check if cursor is on the screen
+fn bool isCursorOnScreen() @extern("IsCursorOnScreen");                                     // Check if cursor is on the screen
 
 // Drawing-related functions
 fn void clearBackground(Color color) @extern("ClearBackground");                            // Set background color (framebuffer clear color)
@@ -758,27 +758,27 @@ fn void beginMode2D(Camera2D camera) @extern("BeginMode2D");                    
 fn void endMode2D() @extern("EndMode2D");                                                   // Ends 2D mode with custom camera
 fn void beginMode3D(Camera3D camera) @extern("BeginMode3D");                                // Begin 3D mode with custom camera (3D)
 fn void endMode3D() @extern("EndMode3D");                                                   // Ends 3D mode and returns to default 2D orthographic mode
-fn void beginTextureMode(RenderTexture2D target) @extern("BeginTextureMode");              // Begin drawing to render texture
-fn void endTextureMode() @extern("EndTextureMode");                                        // Ends drawing to render texture
-fn void beginShaderMode(Shader shader) @extern("BeginShaderMode");                         // Begin custom shader drawing
-fn void endShaderMode() @extern("EndShaderMode");                                          // End custom shader drawing (use default shader)
-fn void beginBlendMode(int mode) @extern("BeginBlendMode");                                // Begin blending mode (alpha, additive, multiplied, subtract, custom)
-fn void endBlendMode() @extern("EndBlendMode");                                            // End blending mode (reset to default: alpha blending)
-fn void beginScissorMode(int x, int y, int w, int h) @extern("BeginScissorMode");          // Begin scissor mode (define screen area for following drawing)
-fn void endScissorMode() @extern("EndScissorMode");                                        // End scissor mode
-fn void beginVrStereoMode(VrStereoConfig config) @extern("BeginVrStereoMode");            // Begin stereo rendering (requires VR simulator)
-fn void endVrStereoMode() @extern("EndVrStereoMode");                                     // End stereo rendering (requires VR simulator)
+fn void beginTextureMode(RenderTexture2D target) @extern("BeginTextureMode");               // Begin drawing to render texture
+fn void endTextureMode() @extern("EndTextureMode");                                         // Ends drawing to render texture
+fn void beginShaderMode(Shader shader) @extern("BeginShaderMode");                          // Begin custom shader drawing
+fn void endShaderMode() @extern("EndShaderMode");                                           // End custom shader drawing (use default shader)
+fn void beginBlendMode(int mode) @extern("BeginBlendMode");                                 // Begin blending mode (alpha, additive, multiplied, subtract, custom)
+fn void endBlendMode() @extern("EndBlendMode");                                             // End blending mode (reset to default: alpha blending)
+fn void beginScissorMode(int x, int y, int w, int h) @extern("BeginScissorMode");           // Begin scissor mode (define screen area for following drawing)
+fn void endScissorMode() @extern("EndScissorMode");                                         // End scissor mode
+fn void beginVrStereoMode(VrStereoConfig config) @extern("BeginVrStereoMode");              // Begin stereo rendering (requires VR simulator)
+fn void endVrStereoMode() @extern("EndVrStereoMode");                                       // End stereo rendering (requires VR simulator)
 
 // VR stereo config functions for VR simulator
-fn VrStereoConfig loadVrStereoConfig(VrDeviceInfo device) @extern("LoadVrStereoConfig");  // Load VR stereo config for VR simulator device parameters
-fn void unloadVrStereoConfig(VrStereoConfig config) @extern("UnloadVrStereoConfig");      // Unload VR stereo config
+fn VrStereoConfig loadVrStereoConfig(VrDeviceInfo device) @extern("LoadVrStereoConfig");    // Load VR stereo config for VR simulator device parameters
+fn void unloadVrStereoConfig(VrStereoConfig config) @extern("UnloadVrStereoConfig");        // Unload VR stereo config
 
 // Shader management functions
 // NOTE: Shader functionality is not available on OpenGL 1.1
-fn Shader loadShader(ZString vsFileName, ZString fsFileName) @extern("LoadShader");          // Load shader from files and bind default locations
-fn Shader loadShaderFromMemory(ZString vs, ZString fs) @extern("LoadShaderFromMemory");      // Load shader from code strings and bind default locations
-fn bool isShaderValid(Shader shader) @extern("IsShaderValid");                               // Check if a shader is ready
-fn int getShaderLocation(Shader shader, ZString uniformName) @extern("GetShaderLocation");   // Get shader uniform location
+fn Shader loadShader(ZString vsFileName, ZString fsFileName) @extern("LoadShader");         // Load shader from files and bind default locations
+fn Shader loadShaderFromMemory(ZString vs, ZString fs) @extern("LoadShaderFromMemory");     // Load shader from code strings and bind default locations
+fn bool isShaderValid(Shader shader) @extern("IsShaderValid");                              // Check if a shader is ready
+fn int getShaderLocation(Shader shader, ZString uniformName) @extern("GetShaderLocation");  // Get shader uniform location
 fn int getShaderLocationAttrib(Shader shader, ZString attr) @extern("GetShaderLocationAttrib");  // Get shader attribute location
 fn void setShaderValue(Shader shader, int locIndex, void* value, int uniformType) @extern("SetShaderValue"); // Set shader uniform value
 fn void setShaderValueV(Shader shader, int locIndex, void* value, int uniformType, int count) @extern("SetShaderValueV");   // Set shader uniform value vector
@@ -795,12 +795,12 @@ fn Vector2 getWorldToScreenEx(Vector3 position, Camera camera, int width, int he
 fn Vector2 getWorldToScreen2D(Vector2 position, Camera2D camera) @extern("GetWorldToScreen2D"); // Get the screen space position for a 2d camera world space position
 fn Vector2 getScreenToWorld2D(Vector2 position, Camera2D camera) @extern("GetScreenToWorld2D"); // Get the world space position for a 2d camera screen space position
 fn Matrix getCameraMatrix(Camera camera) @extern("GetCameraMatrix");                            // Get camera transform matrix (view matrix)
-fn Matrix getCameraMatrix2D(Camera2D camera) @extern("GetCameraMatrix2D");                 // Get camera 2d transform matrix
+fn Matrix getCameraMatrix2D(Camera2D camera) @extern("GetCameraMatrix2D");                  // Get camera 2d transform matrix
 
 // Timing-related functions
-fn void setTargetFPS(int fps) @extern("SetTargetFPS");                                     // Set target FPS (maximum)
+fn void setTargetFPS(int fps) @extern("SetTargetFPS");                                      // Set target FPS (maximum)
 fn int getFPS() @extern("GetFPS");                                                          // Get current FPS
-fn float getFrameTime() @extern("GetFrameTime");                                           // Get time in seconds for last frame drawn (delta time)
+fn float getFrameTime() @extern("GetFrameTime");                                            // Get time in seconds for last frame drawn (delta time)
 fn double getTime() @extern("GetTime");                                                     // Get elapsed time in seconds since InitWindow()
 
 // Custom frame control functions
@@ -895,7 +895,7 @@ fn FilePathList loadDroppedFiles() @extern("LoadDroppedFiles");
 // Unload dropped filepaths
 fn void unloadDroppedFiles(FilePathList files) @extern("UnloadDroppedFiles");
 // Get file modification time (last write time)
-fn CLong getFileModTime(ZString fileName) @extern("GetFileModTime");
+fn long getFileModTime(ZString fileName) @extern("GetFileModTime");
 
 // Compression/Encoding functionality
 // Compress data (DEFLATE algorithm)

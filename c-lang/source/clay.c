@@ -4097,6 +4097,17 @@ void Clay_ResetMeasureTextCache(void) {
     context->measureTextHashMapInternal.length = 1; // Reserve the 0 value to mean "no next element"
 }
 
+// TODO: JEFF: fix context and then remove these
+Clay_PointerData Clay__GetPointerData()
+{
+    return Clay_GetCurrentContext()->pointerInfo;
+}
+
+Clay_LayoutElementArray* Clay__GetLayoutElementArrayFromContext()
+{
+    return &Clay_GetCurrentContext()->layoutElements;
+}
+
 #endif // CLAY_IMPLEMENTATION
 
 /*
