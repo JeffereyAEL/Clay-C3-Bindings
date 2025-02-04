@@ -1,12 +1,16 @@
 # repurposing this repo since I moved clay-bindnigs themselves into a fork of Clay
 # Clay-C3-Bindings
-C3 Bindings for [Clay](https://github.com/nicbarker/clay.git), a UI layout library written in C
+C3 Bindings for [Clay](https://github.com/nicbarker/clay.git), a UI layout library written in C.
+This directory contains the clay.c3 bindings file as well as a recreation of the clay-raylib-renderer and the video-example raylib/clay project.
+
+Special thanks to:
+- [Christoffer L](https://github.com/lerno) C3's core developer (as I understand it)
+- Book-reader in the [C3-lang Discord](https://discord.gg/qN76R87)
 
 ## TODO:
 - Find out how to build a static-lib with additional C sources
 
-## DONE:
-### - C3 macros
+## - C3 macros
 Traditional Clay C Macro System
 
 ```cpp
@@ -32,7 +36,7 @@ CLAY(
 Clay C3 Macro System
 ```cpp
 /* FILTER BUTTON */
-clay::clay(
+@clay(
     clay::id("FilterButton"),
     clay::@bodyIf(clay::hovered(), clay::rectangle({
             .color = clay::hovered() ? FIRE_ORANGE : {80, 25, 200, 255},
@@ -51,8 +55,18 @@ clay::clay(
 };
 ```
 
+## To Get Started:
+- Download c3c [here](https://c3-lang.org/getting-started/prebuilt-binaries/)
+- If you wish to compile the website-example, I've already provided a target to build in the [project.json](project.json)
+- - set your `cd` to [c3](./)
+- - use the `c3c vendor-fetch raylib55` command to download a c3 compressed archive of raylib
+- - - *once you have raylib55.c3l in the [lib](lib) folder you've got it right* 
+- - then use the command `c3c run video-example` to compile and run the video example
+- - then use the command `c3c run gymcommit` to compile and run the workout-tracker
+- - - (*note: to use the `c3c build <target>` command with video-example, you'll need to copy the resource folder into the [build](build) directory to run it*
+- - - *`run` executes the build result from the project directory, somehow. This means that `run` will look for the resource folder in [c3](../c3), while `build` will look for it in [build](build)*)
+
 ## RESOURCES:
-### - [Clay](https://github.com/nicbarker/clay.git) (C-Layout Library)
 ### - [C3](https://github.com/c3lang/c3c.git) (A C-a-like, that aims to bring modern language QA features and a revamped Macro system to C)
 ### - [Raylib](https://github.com/raysan5/raylib.git) (C Videogame and Graphical API)
 ### - [Lexend](https://github.com/googlefonts/lexend.git) (Accessible/ Dyslexic Friendly Font)
